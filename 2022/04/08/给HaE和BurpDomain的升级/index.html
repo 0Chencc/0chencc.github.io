@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon1.png">
+  <link rel="icon" href="/img/favicon1.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="0chencc">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="​    原来打算记录将HaE升级到2.2的过程单独写一篇文章的，一边改一边记录，结果发现太水了，刚好跟b哥打算给BurpDomain和bscan做个缝合，一直挺想学go的，bscan是用go写的，可以顺带学一下go。顺手把这些过程一起记录一下。 ​    很多经验对于我的朋友们来说可能都挺简单的，但是我觉得记录下来总比没有记录下来好。这也是开博客的原因。 HaE：BurpSuite插件开发——将">
+<meta property="og:type" content="article">
+<meta property="og:title" content="给HaE和BurpDomain的升级">
+<meta property="og:url" content="https://0chen.cc/2022/04/08/%E7%BB%99HaE%E5%92%8CBurpDomain%E7%9A%84%E5%8D%87%E7%BA%A7/index.html">
+<meta property="og:site_name" content="林晨的狂乱理想乡">
+<meta property="og:description" content="​    原来打算记录将HaE升级到2.2的过程单独写一篇文章的，一边改一边记录，结果发现太水了，刚好跟b哥打算给BurpDomain和bscan做个缝合，一直挺想学go的，bscan是用go写的，可以顺带学一下go。顺手把这些过程一起记录一下。 ​    很多经验对于我的朋友们来说可能都挺简单的，但是我觉得记录下来总比没有记录下来好。这也是开博客的原因。 HaE：BurpSuite插件开发——将">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://0chen.oss-cn-beijing.aliyuncs.com/16000720732854.png">
+<meta property="og:image" content="https://0chen.oss-cn-beijing.aliyuncs.com/20220409140847.png">
+<meta property="article:published_time" content="2022-04-08T14:17:54.000Z">
+<meta property="article:modified_time" content="2022-04-21T18:55:18.075Z">
+<meta property="article:author" content="0chencc">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Go">
+<meta property="article:tag" content="BurpSuite">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://0chen.oss-cn-beijing.aliyuncs.com/16000720732854.png">
+  
+  
+  <title>给HaE和BurpDomain的升级 - 林晨的狂乱理想乡</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/dracula.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"0chen.cc","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>林晨的狂乱理想乡</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.jpeg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="给HaE和BurpDomain的升级">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-04-08 22:17" pubdate>
+        2022年4月8日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.9k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      41 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">给HaE和BurpDomain的升级</h1>
+            
+            <div class="markdown-body">
+              <p>​    原来打算记录将<a target="_blank" rel="noopener" href="https://github.com/gh0stkey/HaE">HaE</a>升级到2.2的过程单独写一篇文章的，一边改一边记录，结果发现太水了，刚好跟b哥打算给<a target="_blank" rel="noopener" href="https://github.com/Acmesec/BurpDomain">BurpDomain</a>和<a target="_blank" rel="noopener" href="https://github.com/broken5/bscan">bscan</a>做个缝合，一直挺想学go的，bscan是用go写的，可以顺带学一下go。顺手把这些过程一起记录一下。</p>
+<p>​    很多经验对于我的朋友们来说可能都挺简单的，但是我觉得记录下来总比没有记录下来好。这也是开博客的原因。</p>
+<h1 id="HaE：BurpSuite插件开发——将IMessageEditorTab返回自定义UI控件"><a href="#HaE：BurpSuite插件开发——将IMessageEditorTab返回自定义UI控件" class="headerlink" title="HaE：BurpSuite插件开发——将IMessageEditorTab返回自定义UI控件"></a>HaE：BurpSuite插件开发——将IMessageEditorTab返回自定义UI控件</h1><p>​    <strong>这篇文章写到一半觉得很水，纯当记录。</strong></p>
+<p>​    **4月21号：找到一个有点意思的技巧 **</p>
+<h2 id="0x00-更新方向"><a href="#0x00-更新方向" class="headerlink" title="0x00 更新方向"></a>0x00 更新方向</h2><p>​    小key这俩天叫我把<a target="_blank" rel="noopener" href="https://github.com/gh0stkey/HaE">HaE</a>完善一个新的功能，即将Proxy-&gt;HTTP history中的Markinfo的控件返回成JTabbedPannel嵌套JTable的形式，不知道有没有其他师傅研究一下，也没有去检索，于是自己上手来搞一下。</p>
+<p>​    原先HaE返回MarkInfo的代码是这样的：</p>
+<p>路径在<a target="_blank" rel="noopener" href="https://github.com/gh0stkey/HaE/blob/master/src/main/java/burp/BurpExtender.java">https://github.com/gh0stkey/HaE/blob/master/src/main/java/burp/BurpExtender.java</a></p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MarkInfoTab</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">IMessageEditorTab</span> &#123;<br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ITextEditor markInfoText;<br>        <span class="hljs-keyword">private</span> <span class="hljs-type">byte</span>[] currentMessage;<br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> IMessageEditorController controller;<br>        <span class="hljs-keyword">private</span> <span class="hljs-type">byte</span>[] extractRequestContent;<br>        <span class="hljs-keyword">private</span> <span class="hljs-type">byte</span>[] extractResponseContent;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-title function_">MarkInfoTab</span><span class="hljs-params">(IMessageEditorController controller, <span class="hljs-type">boolean</span> editable)</span> &#123;<br>            <span class="hljs-built_in">this</span>.controller = controller;<br>            <span class="hljs-built_in">this</span>.markInfoText = callbacks.createTextEditor();<br>            <span class="hljs-built_in">this</span>.markInfoText.setEditable(editable);<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getTabCaption</span><span class="hljs-params">()</span> &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;MarkInfo&quot;</span>;<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> Component <span class="hljs-title function_">getUiComponent</span><span class="hljs-params">()</span> &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.markInfoText.getComponent();<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">isEnabled</span><span class="hljs-params">(<span class="hljs-type">byte</span>[] content, <span class="hljs-type">boolean</span> isRequest)</span> &#123;<br>            <span class="hljs-type">String</span> <span class="hljs-variable">c</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">String</span>(content, StandardCharsets.UTF_8).intern();<br>            List&lt;String&gt; result = pm.processMessageByContent(helpers, content, isRequest, <span class="hljs-literal">false</span>);<br>            <span class="hljs-keyword">if</span> (result != <span class="hljs-literal">null</span> &amp;&amp; !result.isEmpty()) &#123;<br>                <span class="hljs-keyword">if</span> (isRequest) &#123;<br>                    <span class="hljs-built_in">this</span>.extractRequestContent = result.get(<span class="hljs-number">0</span>).getBytes();<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    <span class="hljs-built_in">this</span>.extractResponseContent = result.get(<span class="hljs-number">0</span>).getBytes();<br>                &#125;<br>                <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>            &#125;<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-type">byte</span>[] getMessage() &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.currentMessage;<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">isModified</span><span class="hljs-params">()</span> &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.markInfoText.isTextModified();<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-type">byte</span>[] getSelectedData() &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.markInfoText.getSelectedText();<br>        &#125;<br><br>        <span class="hljs-comment">/**</span><br><span class="hljs-comment">         * 使用setMessage用来做Extractor</span><br><span class="hljs-comment">         */</span><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">setMessage</span><span class="hljs-params">(<span class="hljs-type">byte</span>[] content, <span class="hljs-type">boolean</span> isRequest)</span> &#123;<br>            <span class="hljs-type">String</span> <span class="hljs-variable">c</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">String</span>(content, StandardCharsets.UTF_8).intern();<br>            <span class="hljs-keyword">if</span> (content.length &gt; <span class="hljs-number">0</span>) &#123;<br>                <span class="hljs-keyword">if</span> (isRequest) &#123;<br>                    <span class="hljs-built_in">this</span>.markInfoText.setText(<span class="hljs-built_in">this</span>.extractRequestContent);<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    <span class="hljs-built_in">this</span>.markInfoText.setText(<span class="hljs-built_in">this</span>.extractResponseContent);<br>                &#125;<br>            &#125;<br>            <span class="hljs-built_in">this</span>.currentMessage = content;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> IMessageEditorTab <span class="hljs-title function_">createNewInstance</span><span class="hljs-params">(IMessageEditorController controller, <span class="hljs-type">boolean</span> editable)</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">MarkInfoTab</span>(controller, editable);<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>​    根据burp官方的要求，来看一下继承接口IMessageEditorTab需要重写的方法，我把原先英文的注释都删除了，简化成自己的理解，也不一定对，大家将就看一下。</p>
+<h2 id="0x01-Burp-IMessageEditorTab接口"><a href="#0x01-Burp-IMessageEditorTab接口" class="headerlink" title="0x01 Burp IMessageEditorTab接口"></a>0x01 Burp IMessageEditorTab接口</h2><figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">IMessageEditorTab</span><br>&#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	返回选项名，显示在选项卡的名字。</span><br><span class="hljs-comment">    */</span><br>    String <span class="hljs-title function_">getTabCaption</span><span class="hljs-params">()</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	返回控件。</span><br><span class="hljs-comment">    */</span><br>    Component <span class="hljs-title function_">getUiComponent</span><span class="hljs-params">()</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	是否显示，HaE的规则中，判断了当流量包有用户设置好的规则时，才会显示这个选项供用户使用</span><br><span class="hljs-comment">    */</span><br>    <span class="hljs-type">boolean</span> <span class="hljs-title function_">isEnabled</span><span class="hljs-params">(<span class="hljs-type">byte</span>[] content, <span class="hljs-type">boolean</span> isRequest)</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	此处是传入数据，取流量包的数据传入，当需要返回自己设定的控件时，需要用此项返回去处理。</span><br><span class="hljs-comment">    */</span><br>    <span class="hljs-keyword">void</span> <span class="hljs-title function_">setMessage</span><span class="hljs-params">(<span class="hljs-type">byte</span>[] content, <span class="hljs-type">boolean</span> isRequest)</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	取得流量包的数据</span><br><span class="hljs-comment">    */</span><br>    <span class="hljs-type">byte</span>[] getMessage();<br>  	<span class="hljs-comment">//以下两个并不在HaE的使用范围里，所以我一个传了false，一个传了null</span><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	这个是用来判断上一次调用的控件的内容与本次调用的控件的内容是否一样，猜测是为了提升效率，当内容一样时就不会再去重新去获取流量包等等，省去了中间的过程从内存里读取上一次的结果。</span><br><span class="hljs-comment">    */</span><br>    <span class="hljs-type">boolean</span> <span class="hljs-title function_">isModified</span><span class="hljs-params">()</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *	这一个是取选中的数据，这个HaE也用不到，我猜测是为了贴合burp官方自带的控件ITextEditor，流量包的Hex的功能就用到了这个函数，但是因为我们的项目用不到，所以我返回了null</span><br><span class="hljs-comment">    */</span><br>    <span class="hljs-type">byte</span>[] getSelectedData();<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>​    原先key用的是burp重写的textarea，ITextEditor这个控件。一开始我拿到源码的时候还在考虑有没有可能不支持原生控件，需要彻底重写呢。想了半天不如自己动手试一下，在尝试了返回一个JTable之后，我就打算放弃写这篇文章了，感觉会很水，因为发现返回的JTable完美地解决问题，没有后续研究的必要了。</p>
+<p>​    不过我把我的思考全写在上面代码的注释了，感兴趣的朋友可以看看。</p>
+<h2 id="0x02-同类型多个控件统一管理方法"><a href="#0x02-同类型多个控件统一管理方法" class="headerlink" title="0x02 同类型多个控件统一管理方法"></a>0x02 同类型多个控件统一管理方法</h2><p>这是4月21号的更新，key跟我说HaE没有办法复制Markinfo里的内容，检查了一下发现是getSelectData()的问题。</p>
+<p>我想到了几年前我开发<a target="_blank" rel="noopener" href="https://github.com/0Chencc/CTFCrackTools">CTFCrackTools</a>时，一个老哥给我的tip，在多个同类型控件情况下，通过单个变量就可以管理这些控件。</p>
+<p>我们需要实现什么功能呢，因为HaE的新版本，会把所有匹配出来的规则单独生成一个JTable，这样使每个规则匹配出来的数据都清晰地单独地显示出来。</p>
+<p>我在HaE中的解决办法是这样的：</p>
+<p>首先在MarkInfoTab类声明一个jTbale变量</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-type">JTable</span> <span class="hljs-variable">jTable</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">JTable</span>();<br></code></pre></div></td></tr></table></figure>
+
+<p>接着在MarkInfoTab类的方法getUiComponent中，原先这个方法就是用来返回JTabbedPane的，那么我在返回之前，先给这个JTabbedPane添加了选中控件改变事件监听</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">public</span> Component <span class="hljs-title function_">getUiComponent</span><span class="hljs-params">()</span> &#123;<br>  jTabbedPane.addChangeListener(<span class="hljs-keyword">new</span> <span class="hljs-title class_">ChangeListener</span>() &#123;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">stateChanged</span><span class="hljs-params">(ChangeEvent arg0)</span> &#123;<br>      jTable = (JTable) ((JScrollPane)jTabbedPane.getSelectedComponent()).getViewport().getView();<br>    &#125;<br>  &#125;);<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.jTabbedPane;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>修改成这样之后，当每一次JTabbedPane变更的时候，都会将当前选中的JTable赋值给jTable这个变量。</p>
+<p>后续在getSelectData也可以返回想要的数据</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">public</span> <span class="hljs-type">byte</span>[] getSelectedData() &#123;<br>  <span class="hljs-type">int</span>[] selectRows = jTable.getSelectedRows();<br>  <span class="hljs-type">StringBuilder</span> <span class="hljs-variable">selectData</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">StringBuilder</span>();<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> row : selectRows) &#123;<br>    selectData.append(jTable.getValueAt(row, <span class="hljs-number">0</span>).toString()).append(<span class="hljs-string">&quot;\n&quot;</span>);<br>  &#125;<br>  <span class="hljs-keyword">return</span> helpers.stringToBytes(selectData.toString());<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<h2 id="0x03-HaE-2-2更新"><a href="#0x03-HaE-2-2更新" class="headerlink" title="0x03 HaE 2.2更新"></a>0x03 HaE 2.2更新</h2><p>​    HaE的这次2.2版本改动，优化了UI，可以让命中规则的信息以更加清晰的方式显示。</p>
+<p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/16000720732854.png" srcset="/img/loading.gif" lazyload></p>
+<p>​    至于最新的代码，大家可以自行到github仓库里进行比对。</p>
+<h1 id="BurpDomain与Bscan的套娃升级"><a href="#BurpDomain与Bscan的套娃升级" class="headerlink" title="BurpDomain与Bscan的套娃升级"></a>BurpDomain与Bscan的套娃升级</h1><p>​    之前BurpDomain写出来后，b哥就对url这个功能一直不满意，就是下面这个地方。所以他想把这部分修改成为扫描器的扫描结果。那实现这两个工具的交互就是我的任务了。</p>
+<p>​    之前可能很多用户对于我使用mysql作为数据库不是很理解，确实如果单独考虑到只是作为收集域名的角度看，那采用更加简便的sqlite是更高效的方式，但是我在开发的时候考虑到可能会有更多玩法，使用mysql的话，可以作为中间数据的载体</p>
+<p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/20220409140847.png" srcset="/img/loading.gif" lazyload></p>
+<p>​    B哥代码太复杂了，我打算把Bscan一部分代码重构一下，重构完再继续写这篇文章，博客还有其他文章要更新。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%BC%80%E5%8F%91%E7%BB%8F%E9%AA%8C/">开发经验</a>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%BC%80%E5%8F%91%E7%BB%8F%E9%AA%8C/BurpSuite%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91/">BurpSuite插件开发</a>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%BC%80%E5%8F%91%E7%BB%8F%E9%AA%8C/%E6%89%AB%E6%8F%8F%E5%99%A8%E5%BC%80%E5%8F%91/">扫描器开发</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Java/">Java</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Go/">Go</a>
+                    
+                      <a class="hover-with-bg" href="/tags/BurpSuite/">BurpSuite</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/04/17/%E8%89%B2%E5%BD%A9/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">色彩</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/03/29/%E5%88%9B%E4%B8%9A%E4%B8%80%E5%B9%B4/">
+                        <span class="hidden-mobile">创业一年</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
