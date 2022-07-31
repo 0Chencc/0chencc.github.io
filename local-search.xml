@@ -4,6 +4,91 @@
   
   
   <entry>
+    <title>关于淘宝商家后台千牛的反爬虫</title>
+    <link href="/2022/08/01/%E5%AF%B9%E4%BA%8E%E9%98%BF%E9%87%8C%E7%B3%BB%E7%94%B5%E5%95%86%E5%B9%B3%E5%8F%B0%E7%9A%84%E5%8F%8D%E7%88%AC%E8%99%AB/"/>
+    <url>/2022/08/01/%E5%AF%B9%E4%BA%8E%E9%98%BF%E9%87%8C%E7%B3%BB%E7%94%B5%E5%95%86%E5%B9%B3%E5%8F%B0%E7%9A%84%E5%8F%8D%E7%88%AC%E8%99%AB/</url>
+    
+    <content type="html"><![CDATA[<p>​    <strong>本文主旨在解决笔者创业遇到的问题，任何人使用文章提及方法与笔者无关</strong></p><p>​    最近自己跟兄弟开了一家淘宝店，但是淘宝提供的官方平台千牛实际体验还是挺差的。我一般对于这种体验比较糟糕的平台都会选择自己去开发辅助工具。</p><p>​    在淘宝的开发平台上，允许开发者选择的应用非常多，但大部分都没有权限。我不太懂的一点就是，我明明只想更好的去管理自己的店铺，却无法获得用来管理的权限…很无语</p><p>​    于是我选择了Python的Selenium模块以及Requests模块来实现我想要功能。</p><p>​    我需要实现的功能是：1.获取店铺的销售情况 2.根据销售情况去比对成本计算出某段时间的盈利</p><p>​    千牛打开网页的时候，需要做很多层校验。应该会发送几个set_cookies的包，同时登录也是会把包做加密进行登录。但是登录之后调用相关的api则没有其他的校验。（那你倒是开放给我们普通人用啊）</p><p>​    我的目的是获取登录后的cookies，但是我的懒狗本质让我不想去点那一下登录，所以我编写自动登录脚本，同时获取cookies，然后再利用cookies使用requests进行post请求。selenium的第三方改造包也可以使用post请求，不过最近在hw，我不太敢去下这些包。还是用点正常的包。</p><h2 id="问题一：swith-to-frame"><a href="#问题一：swith-to-frame" class="headerlink" title="问题一：swith_to_frame"></a>问题一：swith_to_frame</h2><p>​    起初我以为只需要利用Selenium去get千牛登录界面，然后再用find_element定位到用户名，密码，登录按钮即可。没想到在实操上还是遇到了几个麻烦。</p><p>​    但是，千牛的后台登录界面实际上是：先出现第一个窗口，然后利用document来嵌套另一个frame窗口进行登录。</p><p>​    贴一段千牛的代码，这是我遇到的第一个需要切换frame的xpath定位实现。笔者之前在编写需要利用xpath定位的项目时候，是没有遇到过需要切iframe窗口的情况的，这次也是学了一课。</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/20220801023435.png"></p><p>​    我起初是直接从开始的html一路读到iframe，最后再往下定位的时候就无论怎么定位都取不到了。到谷歌搜了相关资料才发现原来需要用switch_to_frame去切窗口。</p><figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python">chrome.switch_to.frame(<span class="hljs-string">&quot;alibaba-login-box&quot;</span>)<br></code></pre></div></td></tr></table></figure><h2 id="问题二：阿里反爬虫机制"><a href="#问题二：阿里反爬虫机制" class="headerlink" title="问题二：阿里反爬虫机制"></a>问题二：阿里反爬虫机制</h2><p>​    我的代码是没有做任何反爬虫处理的，所以在起初的登录上。会直接报“验证失败，点击框体重试”</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/20220801024550.png"></p><p>​    这个问题实际上就是由阿里的反爬虫系统引起的，那么就需要去绕过这个系统。我观察到这个系统似乎是因为selenium.get()这个操作，会附带一些特征，利润window.navigator.webdriver。这些特征多多少少容易被识别出来之后触发反爬虫机制。</p><p>​    那么直接调用现成的谷歌浏览器不就完事了。反正挨个试，被ban了就换。</p><p>​    macos执行以下命令启动一个debug模式的chrome，同时监听8020端口，啥端口都行。</p><figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=8020 --user-data-dir=&quot;~/chromeprofile&quot;<br></code></pre></div></td></tr></table></figure><p>​    接着在Python脚本里关于调用webdriver的options里，设置</p><figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python">options.add_experimental_option(<span class="hljs-string">&quot;debuggerAddress&quot;</span>, <span class="hljs-string">&quot;127.0.0.1:8020&quot;</span>)<br></code></pre></div></td></tr></table></figure><p>​    即可利用创建出来的新chrome窗口去实现自动登录。</p><p>​    这个自动登录可能会遇到需要自己部分手动操作，不过由于是用的浏览器，一些需要二次验证或者防机器人验证也可以自己手动操作一下，可以继续进行操作。</p><p>​    当我改成使用调用创建好的窗口去登录时，所有的问题都解决了。可以正常获取到cookies，并且利用我事先用burp抓好的api去请求到我想要的数据，往后就是研究一下怎么做优化了。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>开发经验</category>
+      
+      <category>爬虫开发</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Python</tag>
+      
+      <tag>爬虫</tag>
+      
+      <tag>Selenium</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>“特别”悖论</title>
+    <link href="/2022/07/18/%E2%80%9C%E7%89%B9%E5%88%AB%E2%80%9D%E6%82%96%E8%AE%BA/"/>
+    <url>/2022/07/18/%E2%80%9C%E7%89%B9%E5%88%AB%E2%80%9D%E6%82%96%E8%AE%BA/</url>
+    
+    <content type="html"><![CDATA[<p>​    长期以来，我都是一个极度自信且自大的人。我也很骄傲与我一起共事的伙伴都同样是能力很强的人。我的能力之与他们的能力，显得微不足道。</p><p>​    我想起码给这个世界留下点什么。但是我会是“特别”的那个人吗？</p><p>​    似乎是也似乎不是，在收到别人的赞扬认同的时候，我一直的态度是我接受但不承认。因为我觉得我的所做都是与我共事的伙伴们带来的。所以我在私底下跟其他朋友聊天的时候，都常常毫不节省夸人的词汇，与这些同伴共事一直是我的荣幸。无论是在任何领域，我都发自内心的觉得与我共事的这些伙伴们都是佼佼者，非常荣幸。</p><p>​    但这些会是因为我是特别的那个人吗？显然不是。</p><p>​    这俩天看完了冰菓。看到折木被入须学姐一番虚假夸赞利用之后，我也陷入“特别”的迷思里。坦白讲我们或多或少都经受过别人对我们的赞扬，我恰好是接受赞扬比较多的那个人，说不动心是不可能的，内心里也因为这些表扬而自大，常常会觉得自己是无所不能，容易去接受一些超出能力范围外的事情，并且忽视了自己原本的特长。</p><p>​    如同折木在被入须学姐的刻意引导下，对自己能力的错误解读然后自己写出剧本。似乎目前我也在陷入这类圈套里。出于这类思考，我近期闲下心来都会去冷静审视自己平庸的前二十年，去仔细思考这些年所作所为究竟是运气还是能力。可能我们究其一生也不过是平庸之辈，所谓荣誉加身在别人眼中也不过泛泛之辈。我还是太容易因为一点所谓荣誉或者所谓小成功而自高自大。最终我还是普通人罢了。</p><p>​    可惜最后得出来的结论是运气，并非是能力所有。这是一个让我很沮丧的结论。我是一个懒散的人，我会为了节省三十分钟的时间花费数个小时找一个偷懒的办法，因为解决问题的时间太长，这也显得我是一个愚笨的人。同时我也是一个投机的人。尽管我在数落我的缺点，却同时在内心安慰自己实际上我还是一个很厉害的人。但这也是显得我是一个自大的人。也许还因为想法很多但很少付出实践，是一个能力不够的人。也是一个一边打游戏一边喊着自己压力太大，心里脆弱的人。</p><p>​    归根结底我所谓的唯一特长大概就是来源于幸运。可能是一个幸运的人。既然老天给我这样的人一个机会，理应当好好珍惜。我写这篇文章的目的也是为了警醒自己，不要忘记学习，永远保持谦卑。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>番剧</category>
+      
+      <category>随笔</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>冰菓</tag>
+      
+      <tag>随笔</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>聊到依赖</title>
+    <link href="/2022/05/03/%E8%81%8A%E5%88%B0%E4%BE%9D%E8%B5%96/"/>
+    <url>/2022/05/03/%E8%81%8A%E5%88%B0%E4%BE%9D%E8%B5%96/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    <categories>
+      
+      <category>随笔</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>随笔</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>将部分工作利用自动化替代</title>
     <link href="/2022/04/26/%E5%B0%86%E9%83%A8%E5%88%86%E5%B7%A5%E4%BD%9C%E5%88%A9%E7%94%A8%E8%87%AA%E5%8A%A8%E5%8C%96%E6%9B%BF%E4%BB%A3/"/>
     <url>/2022/04/26/%E5%B0%86%E9%83%A8%E5%88%86%E5%B7%A5%E4%BD%9C%E5%88%A9%E7%94%A8%E8%87%AA%E5%8A%A8%E5%8C%96%E6%9B%BF%E4%BB%A3/</url>
@@ -88,9 +173,9 @@
     
     <categories>
       
-      <category>读书</category>
-      
       <category>番剧</category>
+      
+      <category>读书</category>
       
     </categories>
     
