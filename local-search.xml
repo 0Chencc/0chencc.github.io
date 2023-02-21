@@ -4,6 +4,56 @@
   
   
   <entry>
+    <title>记录proxychains4在m1使用homebrew安装无法正常使用问题</title>
+    <link href="/2023/02/21/m1%E4%BD%BF%E7%94%A8proxychains4%E8%B8%A9%E5%9D%91/"/>
+    <url>/2023/02/21/m1%E4%BD%BF%E7%94%A8proxychains4%E8%B8%A9%E5%9D%91/</url>
+    
+    <content type="html"><![CDATA[<p>用Homebrew安装的proxychians是无法在m1上正常使用的。所以需要使用github仓库的版本到本地进行编译。</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/rofl0r/proxychains-ng<br><span class="hljs-built_in">cd</span> proxychains-ng<br></code></pre></div></td></tr></table></figure><h1 id="0x00-SIP问题"><a href="#0x00-SIP问题" class="headerlink" title="0x00 SIP问题"></a>0x00 SIP问题</h1><p>由于macos在12.3更新之后，会开启一个sip功能，叫系统完整性保护。这个功能在开启的情况下是无法正常使用proxychains的。如果你并没有进行过任何操作，且你的Macos系统在12.3以上，那么大概率是开启状态。</p><p>如果是m系列mbp，那么可以在电脑关机之后，长按开机键直到可以选择进入恢复模式。在恢复模式启动终端。</p><p>如果是i系列mbp，那么是电脑关机之后，按下开机键的同时按下command+r进入恢复模式。</p><p>输入如下命令进行关闭</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">csrutil <span class="hljs-built_in">disable</span><br></code></pre></div></td></tr></table></figure><p>使用csrutil status查看sip是否处于关闭状态</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302220120639.png"></p><p>后续开启也是一样的进入恢复模式，然后键入以下命令</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">csrutil <span class="hljs-built_in">enable</span><br></code></pre></div></td></tr></table></figure><h1 id="0x01-libproxychains4-dylib不兼容"><a href="#0x01-libproxychains4-dylib不兼容" class="headerlink" title="0x01 libproxychains4.dylib不兼容"></a>0x01 libproxychains4.dylib不兼容</h1><p>解决了sip问题，就可以顺利地在第一次执行proxychains4命令之后遇到***terminating because inserted dylib ‘&#x2F;usr&#x2F;local&#x2F;lib&#x2F;libproxychains4.dylib’ could not be loaded: tried: ‘&#x2F;usr&#x2F;local&#x2F;lib&#x2F;libproxychains4.dylib’ (mach-o file, but is an incompatible architecture (have ‘arm64e’, need ‘’))***这行报错了。</p><p>如下</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302220120969.png"></p><p>网上有个方案是使用arm64e编译出libproxychains4.dylib之后，再使用arm64编译安装再替换那个组件。但是在我这里并没有起作用。最后我参考了[issue #451][<a href="https://github.com/rofl0r/proxychains-ng/issues/451]%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%8C%E5%8D%B3%E7%BC%96%E8%AF%91%E5%87%BAx86_64%E4%BB%A5%E5%8F%8Aarm64e%E4%B8%A4%E4%B8%AA%E7%89%88%E6%9C%AC%E7%9B%B4%E6%8E%A5%E8%BF%9B%E8%A1%8C%E5%AE%89%E8%A3%85%E3%80%82%E9%A1%BA%E5%88%A9%E8%A7%A3%E5%86%B3%E3%80%82%E5%9C%A8%E6%88%91%E7%9A%84%E5%8D%B0%E8%B1%A1%E9%87%8C%EF%BC%8C%E6%88%91%E5%8F%AA%E6%9C%89%E8%BF%99%E8%A1%8C%E5%91%BD%E4%BB%A4%E7%9A%84%E6%93%8D%E4%BD%9C%E8%B5%B7%E4%BA%86%E4%BD%9C%E7%94%A8%EF%BC%8C%E5%85%B6%E4%BD%99%E6%93%8D%E4%BD%9C%E5%9D%87%E6%B2%A1%E6%9C%89%E4%BB%BB%E4%BD%95%E4%BD%9C%E7%94%A8%E3%80%82">https://github.com/rofl0r/proxychains-ng/issues/451]的解决方案，即编译出x86_64以及arm64e两个版本直接进行安装。顺利解决。在我的印象里，我只有这行命令的操作起了作用，其余操作均没有任何作用。</a></p><p>git clone到本地之后，使用命令进行编译即可</p><p>值得补充的一点是，我看到网上相关叙述说存在proxychains4的一些版本中的config.mask中第七行以及第八行的bin&#x2F;lib两个目录的指向会指向到一个苹果保护目录，在苹果的保护目录中，&#x2F;usr&#x2F;local&#x2F;这个目录并非保护目录，所以可以放心写入</p><p>所以需要这两个字段指向的目录为如下（或者也可以指到其他非保护目录，都可以应该）</p><figure class="highlight makefile"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs makefile">bindir=/usr/local/bin<br>libdir=/usr/local/bin<br></code></pre></div></td></tr></table></figure><p>编译命令</p><figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">make clean<br>CFLAGS=&quot;-arch x86_64 -arch=arm64e&quot; LDFLAGS=&quot;-arch x86_64 -arch=arm64e&quot; ./configure<br>make install<br>make install-config #安装相关配置文件，即/usr/local/etc/proxychains.conf文件<br></code></pre></div></td></tr></table></figure><p>于是可以顺利正常使用。</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302220033813.png"></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>macos</tag>
+      
+      <tag>proxychains4</tag>
+      
+      <tag>m1</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Macos下Stable Diffusion从安装到生成图片爬坑过程</title>
+    <link href="/2023/02/14/Macos%E4%B8%8BStable%20Diffusion%E4%BB%8E%E5%AE%89%E8%A3%85%E5%88%B0%E7%94%9F%E6%88%90%E5%9B%BE%E7%89%87%E7%88%AC%E5%9D%91%E8%BF%87%E7%A8%8B/"/>
+    <url>/2023/02/14/Macos%E4%B8%8BStable%20Diffusion%E4%BB%8E%E5%AE%89%E8%A3%85%E5%88%B0%E7%94%9F%E6%88%90%E5%9B%BE%E7%89%87%E7%88%AC%E5%9D%91%E8%BF%87%E7%A8%8B/</url>
+    
+    <content type="html"><![CDATA[<p>​    今天跟着zkl学习了一天用Stable Diffusion生成图片的过程，用的是谷歌的colab免费提供的服务器。但是玩了几个小时就说到期不让用了，所以我想着本地搭建一下。</p><p>​    我的设备是：MacBook M1Max，是arm架构的，本来以为估计是装不完，以苹果这B arm架构肯定坑特多，没想到一路畅通都搞完了。先试试看。后期打算用4090跑。</p><h1 id="0x00-安装stable-diffusion-webui"><a href="#0x00-安装stable-diffusion-webui" class="headerlink" title="0x00 安装stable-diffusion-webui"></a>0x00 安装stable-diffusion-webui</h1><p>stable-diffusion-webui需要的环境是：cmake,protobuf,rust,<a href="mailto:&#x70;&#x79;&#x74;&#x68;&#111;&#110;&#x40;&#51;&#46;&#49;&#48;">&#x70;&#x79;&#x74;&#x68;&#111;&#110;&#x40;&#51;&#46;&#49;&#48;</a>,git,wget</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">brew install cmake protobuf rust python@3.10 git wget<br></code></pre></div></td></tr></table></figure><p>webui在github上，需要使用git clone去拉取到本地，大家需要自备梯子</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/AUTOMATIC1111/stable-diffusion-webui<br></code></pre></div></td></tr></table></figure><h1 id="0x01-引擎选择"><a href="#0x01-引擎选择" class="headerlink" title="0x01 引擎选择"></a>0x01 引擎选择</h1><p>因为训练图片是需要引擎的，有的引擎并不支持arm架构（具体原因不知道）</p><p>按照官方的说法，需要到：<a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Installation-on-Apple-Silicon#downloading-stable-diffusion-models%E9%80%89%E4%B8%80%E4%B8%AA%E8%87%AA%E5%B7%B1%E5%96%9C%E6%AC%A2%E7%9A%84%E5%BC%95%E6%93%8E%E9%9B%86%E4%B8%8B%E8%BD%BD%EF%BC%8C%E7%84%B6%E5%90%8E%E5%88%B0%E6%9C%AC%E5%9C%B0%E7%9C%8B%E7%9C%8B%E8%83%BD%E4%B8%8D%E8%83%BD%E5%B0%9D%E8%AF%95%E8%A3%85%E8%BD%BD%E8%BF%99%E4%B8%AA%E5%BC%95%E6%93%8E%E3%80%82%E5%A6%82%E6%9E%9C%E5%8F%AF%E4%BB%A5%E7%9A%84%E8%AF%9D%E5%B0%B1%E6%8E%A5%E7%9D%80%E7%94%A8%E3%80%82">https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Installation-on-Apple-Silicon#downloading-stable-diffusion-models选一个自己喜欢的引擎集下载，然后到本地看看能不能尝试装载这个引擎。如果可以的话就接着用。</a></p><p>下载好之后放到stable-diffusion-webui&#x2F;models&#x2F;Stable-diffusion目录下。就可以使用了。</p><p>不过我这里是推荐扎克力发的引擎：</p><p><a href="https://huggingface.co/TASUKU2023/Chilloutmix/resolve/main/Chilloutmix-Ni.safetensors">https://huggingface.co/TASUKU2023/Chilloutmix/resolve/main/Chilloutmix-Ni.safetensors</a></p><p>大家也可以下载这个引擎丢进models目录下，用这个引擎跑。</p><p>丢进去之后切回到stable-diffusion-webui目录下，执行</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">./webui.sh<br></code></pre></div></td></tr></table></figure><p>我在安装中，以为自己电脑默认是python3.10，所以没有管。遇到报错才发现自己是3.9，顺便推荐一下pyenv，用来管理自己的python版本挺好用的。使用如下命令可以切到python3.10.5</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">brew install pyenv<br>pyenv install 3.10.5<br>pyenv global 3.10.5 <span class="hljs-comment"># 全局都是用3.10.5</span><br><span class="hljs-built_in">cd</span> stable-diffusion-webui<br>./webui.sh<br></code></pre></div></td></tr></table></figure><p>后续所有ui的操作都可以在终端查看实时进度，多留意终端的信息。</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302211740154.png"></p><p>执行下来就没什么问题了，接下来就是疯狂装插件</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> stable-diffusion-webui<br><br>wget https://raw.githubusercontent.com/camenduru/stable-diffusion-webui-scripts/main/run_n_times.py -O stable-diffusion-webui/scripts/run_n_times.py<br><br>git <span class="hljs-built_in">clone</span> https://github.com/deforum-art/deforum-for-automatic1111-webui extensions/deforum-for-automatic1111-webui<br><br>git <span class="hljs-built_in">clone</span> https://github.com/AlUlkesh/stable-diffusion-webui-images-browser extensions/stable-diffusion-webui-images-browser<br><br>git <span class="hljs-built_in">clone</span> https://github.com/camenduru/stable-diffusion-webui-huggingface extensions/stable-diffusion-webui-huggingface<br><br>git <span class="hljs-built_in">clone</span> -b v2.0 https://github.com/camenduru/sd-civitai-browser extensions/sd-civitai-browser<br><br></code></pre></div></td></tr></table></figure><p>在第一遍安装完成之后，需要在终端或者webui界面上重启一下Stable Diffusion。</p><p>往后启动的命令就是</p><figure class="highlight sh"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sh">./webui.sh<br></code></pre></div></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>人工智能</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>AI</tag>
+      
+      <tag>Stable Diffusion</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>回忆制造者</title>
     <link href="/2022/09/11/%E5%9B%9E%E5%BF%86%E5%88%B6%E9%80%A0%E8%80%85/"/>
     <url>/2022/09/11/%E5%9B%9E%E5%BF%86%E5%88%B6%E9%80%A0%E8%80%85/</url>
