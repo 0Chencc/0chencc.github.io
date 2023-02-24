@@ -4,6 +4,29 @@
   
   
   <entry>
+    <title>Mac版英雄联盟台服使用简体中文技巧</title>
+    <link href="/2023/02/25/Mac%E7%89%88%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E5%8F%B0%E6%9C%8D%E4%BD%BF%E7%94%A8%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E6%8A%80%E5%B7%A7/"/>
+    <url>/2023/02/25/Mac%E7%89%88%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E5%8F%B0%E6%9C%8D%E4%BD%BF%E7%94%A8%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E6%8A%80%E5%B7%A7/</url>
+    
+    <content type="html"><![CDATA[<p>访达–应用程序–League of Legends.app–右键显示包内容–Contents–LoL–system.yaml</p><p>第61行，available_locales:zh_TW改成zh_CN（如下图）</p><p>然后启动游戏，游戏就变成简体中文了。</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302250419008.png"></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>英雄联盟</tag>
+      
+      <tag>台服</tag>
+      
+      <tag>MacOS</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>记录proxychains4在m1使用homebrew安装无法正常使用问题</title>
     <link href="/2023/02/21/m1%E4%BD%BF%E7%94%A8proxychains4%E8%B8%A9%E5%9D%91/"/>
     <url>/2023/02/21/m1%E4%BD%BF%E7%94%A8proxychains4%E8%B8%A9%E5%9D%91/</url>
