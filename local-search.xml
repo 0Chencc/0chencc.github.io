@@ -8,8 +8,14 @@
     <link href="/2023/02/25/Mac%E7%89%88%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E5%8F%B0%E6%9C%8D%E4%BD%BF%E7%94%A8%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E6%8A%80%E5%B7%A7/"/>
     <url>/2023/02/25/Mac%E7%89%88%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E5%8F%B0%E6%9C%8D%E4%BD%BF%E7%94%A8%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E6%8A%80%E5%B7%A7/</url>
     
-    <content type="html"><![CDATA[<p>访达–应用程序–League of Legends.app–右键显示包内容–Contents–LoL–system.yaml</p><p>第61行，available_locales:zh_TW改成zh_CN（如下图）</p><p>然后启动游戏，游戏就变成简体中文了。</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302250419008.png"></p>]]></content>
+    <content type="html"><![CDATA[<p>两种办法，都会在启动Riot客户端时下载简体中文包，需要注意的是以后运行英雄联盟都需要启动riot客户端来运行，而非直接启动lol。否则需要重新进行下面的两个办法之一。</p><p>第一种办法，通过运行英雄联盟客户端时传参数指定语言包。</p><figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">open /Applications/League\ of\ Legends.app/Contents/LoL/LeagueClient.app --args --locale=zh_CN<br></code></pre></div></td></tr></table></figure><p>这个办法可以使用保存成shell，使用shell启动英雄联盟。</p><p>第二种办法，修改配置文件指定语言包。</p><p>访达–应用程序–League of Legends.app–右键显示包内容–Contents–LoL–system.yaml</p><p>第61行，available_locales:zh_TW改成zh_CN（如下图）</p><p>然后启动游戏，游戏就变成简体中文了。修改之后启动lol这个文件内容会变回zh_TW，变成繁体字。但是只要不直接启动英雄联盟，而是通过Riot客户端启动英雄联盟就没有问题。</p><p><img src="https://0chen.oss-cn-beijing.aliyuncs.com/202302250419008.png"></p>]]></content>
     
+    
+    <categories>
+      
+      <category>英雄联盟</category>
+      
+    </categories>
     
     
     <tags>
