@@ -29,31 +29,6 @@
   
   
   <entry>
-    <title>实现一个ffmpeg的patch</title>
-    <link href="/2025/11/27/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAffmpeg%E7%9A%84patch/"/>
-    <url>/2025/11/27/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAffmpeg%E7%9A%84patch/</url>
-    
-    <content type="html"><![CDATA[<p>最近疯狂使用Kazumi看番，遇到很多问题我都自行修复并且提交pr。</p><p>但是自始自终没有解决遇到广告跳过的问题，当前的Kazumi会在遭遇广告时跳转到0:00，在这个时间轴开始播放广告，同时在下次同样的位置遇到广告时重复上述动作，变成了无限月读。</p><p>在与Kazumi作者讨论过后，我决定尝试为FFmpeg编写一个树外补丁(Patch)来解决这个问题，我引用了Kazumi作者此前自行实现的树外补丁仓库 <a href="https://github.com/Predidit/libmpv-win32-video-cmake">https://github.com/Predidit/libmpv-win32-video-cmake</a> 因为本质上都是为了给Kazumi提供实现，所以我想着干脆pr到这个仓库下，这样也不需要每次都编译两次。</p><p>实际上开发的路途还算顺利，在第一天的patch上就完成了对广告的识别并且可以实现跳过，只不过没有解决音频问题。</p><p>这是我第一次接触这样的工程，所以暴露出很多问题，我第一次进行llvm toolchain的编译之后，尝试debug时一直在尝试调起mpv clang,但是在重复了五六次之后，我发现没有正确清除cacche，而如果仅仅保留llvm toolchain编译的root包，则会遇到mpv clang编译失败的问题。</p><p>在仔细查看了workflow之后，我发现了问题所在。所以我尝试修复。</p>]]></content>
-    
-    
-    <categories>
-      
-      <category>FFmpeg</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>FFmpeg</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>久违了朋友</title>
     <link href="/2025/11/08/gap-year/"/>
     <url>/2025/11/08/gap-year/</url>
